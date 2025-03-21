@@ -1,0 +1,32 @@
+[
+  {
+    "id": "96f86a5c-0b22-470c-9d01-61c8b1da8ecb",
+    "title": "New product",
+    "description": "123",
+    "price": 5
+  },
+  {
+    "id": "885c4442-6cf4-4bea-8213-a02dcd4b9fb5",
+    "title": "Pizza 3",
+    "description": "Test",
+    "price": 500
+  },
+  {
+    "id": "7b2379f5-6c33-4c2a-8b9e-abdeaeb5ac14",
+    "title": "Pizza 2",
+    "description": "Test",
+    "price": 500
+  },
+  {
+    "id": "63b30935-9c07-479e-944b-bd01e23857f5",
+    "title": "Pizza",
+    "description": "Test",
+    "price": 500
+  },
+  {
+    "id": "06a2faa7-7c4a-43ce-a245-c6e2dbe2401b",
+    "title": "dfvdfv",
+    "description": "dfvdfv",
+    "price": 5
+  }
+]
