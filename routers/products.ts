@@ -22,7 +22,7 @@ productRouter.post('/', imagesUpload.single('image'), async (req, res) => {
     const newProduct: ProductWithoutId = {
         title: req.body.title,
         description: req.body.description,
-        price: req.body.price,
+        price: Number(req.body.price),
         image: req.file ? 'images/' + req.file.filename : null,
     };
 
