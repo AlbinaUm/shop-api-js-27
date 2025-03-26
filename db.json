@@ -1,13 +1,13 @@
 [
   {
-    "id": "96f86a5c-0b22-470c-9d01-61c8b1da8ecb",
-    "title": "New product",
-    "description": "123",
+    "id": "06a2faa7-7c4a-43ce-a245-c6e2dbe2401b",
+    "title": "dfvdfv",
+    "description": "dfvdfv",
     "price": 5
   },
   {
-    "id": "885c4442-6cf4-4bea-8213-a02dcd4b9fb5",
-    "title": "Pizza 3",
+    "id": "63b30935-9c07-479e-944b-bd01e23857f5",
+    "title": "Pizza",
     "description": "Test",
     "price": 500
   },
@@ -18,15 +18,22 @@
     "price": 500
   },
   {
-    "id": "63b30935-9c07-479e-944b-bd01e23857f5",
-    "title": "Pizza",
+    "id": "885c4442-6cf4-4bea-8213-a02dcd4b9fb5",
+    "title": "Pizza 3",
     "description": "Test",
     "price": 500
   },
   {
-    "id": "06a2faa7-7c4a-43ce-a245-c6e2dbe2401b",
-    "title": "dfvdfv",
-    "description": "dfvdfv",
+    "id": "96f86a5c-0b22-470c-9d01-61c8b1da8ecb",
+    "title": "New product",
+    "description": "123",
     "price": 5
+  },
+  {
+    "id": "4dd1f35d-17c4-4883-85a5-8205da9d96a3",
+    "title": "dfvdfv",
+    "description": "tyjntn",
+    "price": "4",
+    "image": "images/0a1bdbb0-94dc-4f2c-b994-17d782b10909.jpeg"
   }
 ]

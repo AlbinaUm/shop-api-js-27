@@ -24,6 +24,7 @@ const fileDb = {
         return data.find(p => p.id === param_id);
     },
     async getAllProducts() {
+        await fileDb.init();
         return data.reverse();
     },
     async addNewProduct(productToAdd: ProductWithoutId) {
