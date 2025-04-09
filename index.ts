@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import express from "express";
 import productRouter from "./routers/products";
 import cors from "cors";
@@ -16,16 +17,14 @@ app.use('/categories', categoryRouter);
 
 const run = async () => {
     await mysqlDb.init();
-    await mongoDb.connect();
-
-    // await fileDb.init();
+    await mongoose.connect('mongodb://localhost/shop-js-27');
 
     app.listen(port, () => {
         console.log(`Server started on http://localhost:${port}`);
     });
 
     process.on('exit', () => {
-        mongoDb.disconnect();
+        mongoose.disconnect();
     });
 };
 
