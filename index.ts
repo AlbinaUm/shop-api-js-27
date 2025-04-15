@@ -2,9 +2,7 @@ import mongoose from 'mongoose';
 import express from "express";
 import productRouter from "./routers/products";
 import cors from "cors";
-import mysqlDb from "./mysqlDb";
 import categoryRouter from "./routers/categories";
-import mongoDb from "./mongoDb";
 
 const app = express();
 const port = 8000;
@@ -16,7 +14,6 @@ app.use('/products', productRouter);
 app.use('/categories', categoryRouter);
 
 const run = async () => {
-    await mysqlDb.init();
     await mongoose.connect('mongodb://localhost/shop-js-27');
 
     app.listen(port, () => {
