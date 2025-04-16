@@ -14,3 +14,9 @@ export interface Category {
     title: string;
     description: string;
 }
+
+export interface UserFields {
+    username: string;
+    password: string;
+    token: string;
+}
