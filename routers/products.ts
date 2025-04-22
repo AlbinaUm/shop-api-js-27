@@ -1,6 +1,6 @@
 import express from 'express';
 import {ProductWithoutId} from "../types";
-import {imagesUpload} from "../multer";
+import {imagesUpload} from "../middleware/multer";
 import {Error} from "mongoose";
 import Product from "../models/Product";
 
@@ -8,6 +8,7 @@ const productRouter = express.Router();
 
 
 // MongoDB
+
 
 productRouter.get('/', async (req, res, next) => {
     try {

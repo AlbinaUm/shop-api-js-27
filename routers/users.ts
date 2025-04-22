@@ -1,7 +1,7 @@
 import express from "express";
 import {Error} from 'mongoose';
 import User from "../models/User";
-import bcrypt from "bcrypt";
+import auth, {RequestWithUser} from "../middleware/auth";
 
 const usersRouter = express.Router();
 
@@ -51,24 +51,12 @@ usersRouter.post('/sessions', async (req, res, next) => {
     res.send({message: 'Username and password is correct', user});
 });
 
-usersRouter.post('/secret', async (req, res, next) => {
-    const token = req.get('Authorization');
-
-    if (!token) {
-        res.status(401).send({error: 'No token present'});
-        return;
-    }
-
-    const user = await User.findOne({token});
-
-    if (!user) {
-        res.status(401).send({error: 'Wrong token'});
-        return;
-    }
+usersRouter.post('/secret', auth, async (req, res, next) => {
+    const user = (req as RequestWithUser).user;
 
     res.send({
         message: 'Secret message',
-        user: user.id,
+        user: user,
     });
 });
 

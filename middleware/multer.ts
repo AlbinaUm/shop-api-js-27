@@ -1,7 +1,7 @@
 import multer from "multer";
 import {promises as fs} from 'fs';
 import path from 'path';
-import config from "./config";
+import config from "../config";
 import {randomUUID} from "node:crypto";
 
 
