@@ -10,6 +10,84 @@ const productRouter = express.Router();
 // MongoDB
 
 
+// PUT - полную замену документа. Обновляет все поля даже если вы не передали все данные в req.body.
+// Поля которые не передали могут исчезнуть или стать null
+
+
+productRouter.put('/:id', imagesUpload.single('image'), async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        if (!id) {
+            res.status(400).send({error: 'Product id must be in req params'});
+            return;
+        }
+
+        const updateProduct = {...req.body};
+
+        if (req.file) {
+            updateProduct.image = 'images/' + req.file.filename;
+        }
+
+        const product = await Product.findOneAndReplace({_id: id}, updateProduct, {runValidators: true, new: true});
+
+        if (!product) {
+            res.status(404).send({error: 'Product not found'});
+            return;
+        }
+
+        await product.save();
+        res.send(product);
+    } catch (error) {
+        if (error instanceof Error.ValidationError  || error instanceof Error.CastError) {
+            res.status(400).send(error);
+            return;
+        }
+
+        next(error);
+    }
+})
+
+// PATCH - частичное обновление ресурса. Обновляет только указанные поля и остальные не трогаются
+
+// findByIdAndUpdate() - топ для обновления вашего документа через mongoose
+
+
+productRouter.patch('/:id', imagesUpload.single('image'), async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        if (!id) {
+            res.status(400).send({error: 'Product id must be in req params'});
+            return;
+        }
+
+        const updateProduct = {...req.body};
+
+        if (req.file) {
+            updateProduct.image = 'images/' + req.file.filename;
+        }
+
+        // product - вернет вам уже обновленный продукт полностью
+        const product = await Product.findByIdAndUpdate(id, updateProduct, {new: true, runValidators: true});
+
+        if (!product) {
+            res.status(404).send({error: 'Product not found'});
+            return;
+        }
+
+        await product.save();
+        res.send(product);
+    } catch (error) {
+        if (error instanceof Error.ValidationError  || error instanceof Error.CastError) {
+            res.status(400).send(error);
+            return;
+        }
+
+        next(error);
+    }
+})
+
+
+
 productRouter.get('/', async (req, res, next) => {
     try {
         const category_id = req.query.category as string;
