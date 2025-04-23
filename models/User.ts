@@ -28,6 +28,13 @@ const UserSchema = new mongoose.Schema<
         type: String,
         required: true,
         unique: true,
+        validate: {
+            validator: async function(value: string): Promise<boolean> {
+                const user: HydratedDocument<UserFields> | null = await User.findOne({username: value});
+                return !user;
+            },
+            message: "This is username is already taken"
+        }
     },
     password: {
         type: String,
