@@ -30,6 +30,7 @@ const UserSchema = new mongoose.Schema<
         unique: true,
         validate: {
             validator: async function(value: string): Promise<boolean> {
+                if (!this.isModified('username')) return true;
                 const user: HydratedDocument<UserFields> | null = await User.findOne({username: value});
                 return !user;
             },
