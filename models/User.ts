@@ -15,6 +15,8 @@ const ARGON2_OPTIONS = {
     parallelism: 1,
 };
 
+const JWT_SECRET = process.env.JWT_SECRET || 'default_fallback_secret';
+
 type UserModel = Model<UserFields, {}, UserMethods>;
 
 
