@@ -51,6 +51,29 @@ usersRouter.post('/sessions', async (req, res, next) => {
     res.send({message: 'Username and password is correct', user});
 });
 
+// logout
+usersRouter.delete('/sessions', async (req, res, next) => {
+    const token = req.get('Authorization');
+
+    if (!token) {
+        res.send({message: 'Success logout'});
+        return;
+    }
+
+    try {
+        const user = await User.findOne({token});
+
+        if (user) {
+            user.generateToken();
+            await user.save();
+        }
+
+        res.send({message: 'Success logout'});
+    } catch (e) {
+        next(e);
+    }
+});
+
 usersRouter.post('/secret', auth, async (req, res, next) => {
     const user = (req as RequestWithUser).user;
 

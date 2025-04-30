@@ -1,0 +1,3 @@
+JWT - состоит из трех частей
+
+header.payload.signature
