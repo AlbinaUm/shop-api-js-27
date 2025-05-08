@@ -1,10 +1,8 @@
-import mongoose, {Model} from "mongoose";
+import mongoose from "mongoose";
 import config from "./config";
 import Category from "./models/Category";
 import Product from "./models/Product";
 import User from "./models/User";
-
-type Schema = Model<typeof User>;
 
 
 const run = async () => {
@@ -46,20 +44,24 @@ const run = async () => {
         }
     );
 
-    await User.create(
-        {
-            username: "John",
-            password: "123",
-            token: '123',
-            role: "user",
-        },
-        {
-            username: "Jane",
-            password: "123",
-            token: '112',
-            role: "admin"
-        }
-    )
+    const john = new User({
+        username: "John",
+        password: "123",
+        role: "user",
+    });
+
+    john.generateToken();
+    await john.save();
+
+    const jane = new User({
+        username: "Jane",
+        password: "123",
+        role: "admin",
+    });
+
+    jane.generateToken();
+    await jane.save();
+
     await db.close();
 };
 

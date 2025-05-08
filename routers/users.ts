@@ -10,11 +10,25 @@ usersRouter.post('/', async (req, res, next) => {
         const user = new User({
             username: req.body.username,
             password: req.body.password,
+            confirmPassword: req.body.confirmPassword,
         });
 
         user.generateToken();
         await user.save();
-        res.send({user, message: 'User registered successfully.'});
+
+        res.cookie('token', user.token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict', // CSRF
+        });
+
+        const safeUser = {
+            _id: user._id,
+            username: user.username,
+            role: user.role,
+        };
+
+        res.send({user: safeUser, message: 'User registered successfully.'});
     } catch (error) {
         if (error instanceof Error.ValidationError) {
             res.status(400).send(error);
@@ -25,7 +39,7 @@ usersRouter.post('/', async (req, res, next) => {
     }
 });
 
-usersRouter.post('/sessions', async (req, res, next) => {
+usersRouter.post('/sessions', async (req, res, _next) => {
     if (!req.body.username || !req.body.password) {
         res.status(400).send({error: 'Username and password must be in req'});
         return;
@@ -48,17 +62,35 @@ usersRouter.post('/sessions', async (req, res, next) => {
     user.generateToken();
     await user.save();
 
-    res.send({message: 'Username and password is correct', user});
+    res.cookie('token', user.token, {
+       httpOnly: true,
+       secure: process.env.NODE_ENV === 'production',
+       sameSite: 'strict', // CSRF
+    });
+
+    const safeUser = {
+        _id: user._id,
+        username: user.username,
+        role: user.role,
+    };
+
+    res.send({message: 'Username and password is correct', user: safeUser});
 });
 
 // logout
-usersRouter.delete('/sessions', async (req, res, next) => {
+usersRouter.delete('/sessions', auth, async (req, res, next) => {
     const token = req.get('Authorization');
 
     if (!token) {
         res.send({message: 'Success logout'});
         return;
     }
+
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+    });
 
     try {
         const user = await User.findOne({token});
@@ -74,7 +106,7 @@ usersRouter.delete('/sessions', async (req, res, next) => {
     }
 });
 
-usersRouter.post('/secret', auth, async (req, res, next) => {
+usersRouter.post('/secret', auth, async (req, res, _next) => {
     const user = (req as RequestWithUser).user;
 
     res.send({

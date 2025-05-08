@@ -8,6 +8,10 @@ interface UserMethods {
     generateToken(): void;
 }
 
+interface UserVirtuals {
+    confirmPassword: string;
+}
+
 const ARGON2_OPTIONS = {
     type: argon2.argon2id,
     memoryCost: 2 ** 16,
@@ -27,7 +31,8 @@ const UserSchema = new mongoose.Schema<
     HydratedDocument<UserFields>,
     UserModel,
     UserMethods,
-    {}
+    {},
+    UserVirtuals
 >({
     username: {
         type: String,
@@ -56,6 +61,17 @@ const UserSchema = new mongoose.Schema<
         type: String,
         required: true,
     }
+}, {
+    virtuals: {
+        confirmPassword: {
+            get() {
+                return this.__confirmPassword;
+            },
+            set(confirmPassword: string) {
+                this.__confirmPassword = confirmPassword;
+            }
+        }
+    }
 });
 
 UserSchema.methods.checkPassword = async function (password: string){
@@ -65,6 +81,15 @@ UserSchema.methods.checkPassword = async function (password: string){
 UserSchema.methods.generateToken = function (){
     this.token = generateTokenJWT(this);
 }
+
+UserSchema.path('password').validate(async function (v: string) {
+    if (!this.isModified('password')) return;
+
+    if (v !== this.confirmPassword) {
+        this.invalidate('confirmPassword', 'Passwords do not match');
+        this.invalidate('password', 'Passwords do not match');
+    }
+});
 
 UserSchema.pre('save', async function (next){
     if (!this.isModified("password")) return next();

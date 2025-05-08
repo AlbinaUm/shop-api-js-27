@@ -20,4 +20,5 @@ export interface UserFields {
     password: string;
     token: string;
     role: string;
+    __confirmPassword: string;
 }

@@ -14,7 +14,7 @@ const auth = async (
     try {
         const req = expressReq as RequestWithUser;
 
-        const jwtToken = req.get('Authorization')?.replace("Bearer ", ''); // Bearer efrjrejferf
+        const jwtToken = req.cookies.token;
 
 
         if (!jwtToken) {
