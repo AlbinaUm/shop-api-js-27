@@ -1,8 +1,10 @@
-import mongoose from "mongoose";
+import mongoose, {Model} from "mongoose";
 import config from "./config";
 import Category from "./models/Category";
 import Product from "./models/Product";
 import User from "./models/User";
+
+type Schema = Model<typeof User>;
 
 
 const run = async () => {
@@ -48,15 +50,16 @@ const run = async () => {
         {
             username: "John",
             password: "123",
-            token: crypto.randomUUID()
+            token: '123',
+            role: "user",
         },
         {
             username: "Jane",
             password: "123",
-            token: crypto.randomUUID()
+            token: '112',
+            role: "admin"
         }
     )
-
     await db.close();
 };
 
