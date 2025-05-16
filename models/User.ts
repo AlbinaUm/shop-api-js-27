@@ -60,7 +60,9 @@ const UserSchema = new mongoose.Schema<
     token: {
         type: String,
         required: true,
-    }
+    },
+    displayName: String,
+    googleID: String,
 }, {
     virtuals: {
         confirmPassword: {

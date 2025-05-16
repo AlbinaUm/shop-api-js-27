@@ -47,6 +47,7 @@ const run = async () => {
     const john = new User({
         username: "John",
         password: "123",
+        confirmPassword: "123",
         role: "user",
     });
 
@@ -56,6 +57,7 @@ const run = async () => {
     const jane = new User({
         username: "Jane",
         password: "123",
+        confirmPassword: "123",
         role: "admin",
     });
 
