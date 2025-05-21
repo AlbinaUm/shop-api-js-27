@@ -63,6 +63,8 @@ const UserSchema = new mongoose.Schema<
     },
     displayName: String,
     googleID: String,
+    facebookID: String,
+    githubID: String,
 }, {
     virtuals: {
         confirmPassword: {

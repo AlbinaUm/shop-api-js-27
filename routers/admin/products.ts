@@ -57,6 +57,7 @@ productAdminRouter.get('/', async (req, res, next) => {
 
 productAdminRouter.post('/', imagesUpload.single('image'), async (req, res, next) => {
     try {
+
         const newProduct: ProductWithoutId = {
             category: req.body.category,
             title: req.body.title,
