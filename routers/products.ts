@@ -1,9 +1,10 @@
 import express from 'express';
 import Product from "../models/Product";
+import auth from "../middleware/auth";
 
 const productRouter = express.Router();
 
-productRouter.get('/', async (req, res, next) => {
+productRouter.get('/' , auth, async (req, res, next) => {
     try {
         const category_id = req.query.category as string;
         const filter: {category?: string} = {};

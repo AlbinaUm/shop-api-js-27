@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 
 interface UserMethods {
     checkPassword: (password: string) => Promise<boolean>;
-    generateToken(): void;
 }
 
 interface UserVirtuals {
@@ -19,11 +18,17 @@ const ARGON2_OPTIONS = {
     parallelism: 1,
 };
 
-export const generateTokenJWT = (user: HydratedDocument<UserFields>) => {
-    return jwt.sign({_id: user._id}, JWT_SECRET, { expiresIn: "365d" })
+export const generateAccessToken = (user: HydratedDocument<UserFields>) => {
+    return jwt.sign({_id: user._id}, JWT_SECRET, { expiresIn: "1m" })
 }
 
+export const generateRefreshToken = (user: HydratedDocument<UserFields>) => {
+    return jwt.sign({_id: user._id}, JWT_REFRESH_SECRET, { expiresIn: "2m" })
+}
+
+
 export const JWT_SECRET = process.env.JWT_SECRET || 'default_fallback_secret';
+export const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'default_fallback_secret';
 
 type UserModel = Model<UserFields, {}, UserMethods>;
 
@@ -57,7 +62,7 @@ const UserSchema = new mongoose.Schema<
       default: 'user',
       enum: ['user', 'admin'],
     },
-    token: {
+    refreshToken: {
         type: String,
         required: true,
     },
@@ -80,10 +85,6 @@ const UserSchema = new mongoose.Schema<
 
 UserSchema.methods.checkPassword = async function (password: string){
     return await argon2.verify(this.password, password);
-}
-
-UserSchema.methods.generateToken = function (){
-    this.token = generateTokenJWT(this);
 }
 
 UserSchema.path('password').validate(async function (v: string) {

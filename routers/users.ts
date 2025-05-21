@@ -1,11 +1,12 @@
 import express from "express";
 import {Error} from 'mongoose';
-import User from "../models/User";
-import auth, {RequestWithUser} from "../middleware/auth";
+import User, {generateAccessToken, generateRefreshToken, JWT_REFRESH_SECRET} from "../models/User";
+import auth from "../middleware/auth";
 import {OAuth2Client} from "google-auth-library";
 import config from "../config";
 import axios from "axios";
 import {randomUUID} from "node:crypto";
+import jwt from "jsonwebtoken";
 
 const usersRouter = express.Router();
 const client = new OAuth2Client(config.google.clientId);
@@ -49,10 +50,14 @@ usersRouter.get('/callback', async (req, res, next) => {
             });
         }
 
-        user.generateToken();
-        await user.save();
 
-        res.cookie('token', user.token, {
+        const refreshToken = generateRefreshToken(user);
+        user.refreshToken = refreshToken;
+
+        user.save();
+
+
+        res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
@@ -107,14 +112,16 @@ usersRouter.post('/facebook', async (req, res, next) => {
             });
         }
 
-        user.generateToken();
-        await user.save();
+        const accessTokenJwt = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+        user.refreshToken = refreshToken;
 
+        user.save();
 
-        res.cookie('token', user.token, {
+        res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'strict', // CSRF
         });
 
         const safeUser = {
@@ -124,13 +131,11 @@ usersRouter.post('/facebook', async (req, res, next) => {
             displayName: user.displayName,
         };
 
-        res.send({user: safeUser, message: 'Login with Google successfully.'});
+        res.send({user: safeUser, message: 'Login with Google successfully.', accessToken: accessTokenJwt});
     } catch (e){
         next(e);
     }
 });
-
-
 
 usersRouter.post('/google', async (req, res, next) => {
     try {
@@ -176,11 +181,20 @@ usersRouter.post('/google', async (req, res, next) => {
             });
         }
 
-        user.generateToken();
-        await user.save();
+        const accessTokenJwt = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+        user.refreshToken = refreshToken;
+
+        user.save();
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict', // CSRF
+        });
 
 
-        res.cookie('token', user.token, {
+        res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict', // CSRF
@@ -193,7 +207,7 @@ usersRouter.post('/google', async (req, res, next) => {
             displayName: user.displayName,
         };
 
-        res.send({user: safeUser, message: 'Login with Google successfully.'});
+        res.send({user: safeUser, message: 'Login with Google successfully.', accessToken: accessTokenJwt});
     } catch (e){
         next(e);
     }
@@ -208,10 +222,13 @@ usersRouter.post('/', async (req, res, next) => {
             confirmPassword: req.body.confirmPassword,
         });
 
-        user.generateToken();
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+        user.refreshToken = refreshToken;
+
         await user.save();
 
-        res.cookie('token', user.token, {
+        res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict', // CSRF
@@ -223,7 +240,7 @@ usersRouter.post('/', async (req, res, next) => {
             role: user.role,
         };
 
-        res.send({user: safeUser, message: 'User registered successfully.'});
+        res.send({accessToken, user: safeUser, message: 'User registered successfully.'});
     } catch (error) {
         if (error instanceof Error.ValidationError) {
             res.status(400).send(error);
@@ -254,10 +271,13 @@ usersRouter.post('/sessions', async (req, res, _next) => {
         return;
     }
 
-    user.generateToken();
-    await user.save();
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    user.refreshToken = refreshToken;
 
-    res.cookie('token', user.token, {
+    user.save();
+
+    res.cookie('refreshToken', refreshToken, {
        httpOnly: true,
        secure: process.env.NODE_ENV === 'production',
        sameSite: 'strict', // CSRF
@@ -269,10 +289,9 @@ usersRouter.post('/sessions', async (req, res, _next) => {
         role: user.role,
     };
 
-    res.send({message: 'Username and password is correct', user: safeUser});
+    res.send({message: 'Username and password is correct', user: safeUser, accessToken});
 });
 
-// logout
 usersRouter.delete('/sessions', auth, async (req, res, next) => {
     const token = req.get('Authorization');
 
@@ -281,7 +300,7 @@ usersRouter.delete('/sessions', auth, async (req, res, next) => {
         return;
     }
 
-    res.clearCookie('token', {
+    res.clearCookie('refreshToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -291,7 +310,7 @@ usersRouter.delete('/sessions', auth, async (req, res, next) => {
         const user = await User.findOne({token});
 
         if (user) {
-            user.generateToken();
+            user.refreshToken = generateRefreshToken(user);
             await user.save();
         }
 
@@ -301,36 +320,75 @@ usersRouter.delete('/sessions', auth, async (req, res, next) => {
     }
 });
 
-usersRouter.post('/secret', auth, async (req, res, _next) => {
-    const user = (req as RequestWithUser).user;
+usersRouter.post('/secret', async (req, res, _next) => {
+    const refreshToken = req.cookies.refreshToken;
 
-    const findUser = await User.findById(user._id);
-
-    if (!findUser) {
-       res.status(404).send({error: 'No user found with this id'});
-       return;
+    if (!refreshToken) {
+        res.status(403).send({error: 'No refresh token provided'});
+        return;
     }
 
-    findUser.generateToken();
-    findUser.save();
+    try {
+        const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as {_id: string};
 
-    res.cookie('token', findUser.token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-    });
+        const user = await User.findById(payload._id);
 
-    const safeUser = {
-        _id: user._id,
-        username: user.username,
-        role: user.role,
-    };
+        if (!user || user.refreshToken !== refreshToken) {
+            res.status(403).send({error: 'Invalid refresh token provided'});
+            return;
+        }
 
-    res.send({
-        message: 'Secret message',
-        user: safeUser,
-    });
+        const accessTokenJwt = generateAccessToken(user);
+        const refreshTokenJwt = generateRefreshToken(user);
+        user.refreshToken = refreshToken;
+
+        res.cookie('refreshToken', refreshTokenJwt, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+        });
+
+
+        const safeUser = {
+            _id: user._id,
+            username: user.username,
+            role: user.role,
+        };
+
+        res.send({
+            message: 'Secret message',
+            user: safeUser,
+            accessToken: accessTokenJwt
+        });
+    } catch (e) {
+        res.status(403).send({error: 'Refresh token invalid or expired'});
+    }
 });
 
+
+usersRouter.post('/refresh-token', async (req, res, _next) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+        res.status(403).send({error: 'No refresh token provided'});
+        return;
+    }
+
+    try {
+        const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as {_id: string};
+
+        const user = await User.findById(payload._id);
+
+        if (!user || user.refreshToken !== refreshToken) {
+            res.status(403).send({error: 'Invalid refresh token provided'});
+            return;
+        }
+
+        const newAccessToken = generateAccessToken(user);
+        res.send({accessToken: newAccessToken});
+    } catch (e) {
+        res.status(403).send({error: 'Refresh token invalid or expired'});
+    }
+})
 
 export default usersRouter;

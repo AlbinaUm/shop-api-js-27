@@ -14,22 +14,22 @@ const auth = async (
     try {
         const req = expressReq as RequestWithUser;
 
-        const jwtToken = req.cookies.token;
+        const authHeader = req.headers.authorization;
 
 
-        if (!jwtToken) {
-            res.status(401).send({error: 'No token provided.'});
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            res.status(401).send({error: 'No access token provided.'});
             return;
         }
 
-        // decoded => {id}
-        // проверяем токен и извлекаем payload
-        const decoded = jwt.verify(jwtToken, JWT_SECRET) as {_id: string}
+        const token = authHeader.split(" ")[1];
 
-        const user = await User.findOne({_id: decoded._id, token: jwtToken});
+        const decoded = jwt.verify(token, JWT_SECRET) as {_id: string}
+
+        const user = await User.findById(decoded._id);
 
         if (!user) {
-            res.status(401).send({error: 'User not found or invalid token'});
+            res.status(401).send({error: 'User not found or invalid access token'});
             return;
         }
 
@@ -37,7 +37,7 @@ const auth = async (
         next();
     } catch (e) {
         if (e instanceof TokenExpiredError) {
-            res.status(401).send({error: 'Your token expired'});
+            res.status(401).send({error: 'Your access token expired'});
         } else {
             res.status(401).send({error: 'Please log in to authenticate'});
         }

@@ -6,3 +6,8 @@ header.payload.signature
 HTTP-only-cookie - это вид cookie
 не доступен Js
 Может быть прочитан только сервером при HTTP запросе
+
+access (Bearer и хранится в памяти клиента )
+ 15 минут
+
+refresh (http-only-cookie) 7 дней
