@@ -16,7 +16,7 @@ export interface Category {
 }
 
 export interface UserFields {
-    username: string;
+    email: string;
     password: string;
     refreshToken: string;
     role: string;

@@ -31,6 +31,7 @@ export const JWT_SECRET = process.env.JWT_SECRET || 'default_fallback_secret';
 export const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'default_fallback_secret';
 
 type UserModel = Model<UserFields, {}, UserMethods>;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const UserSchema = new mongoose.Schema<
     HydratedDocument<UserFields>,
@@ -39,18 +40,26 @@ const UserSchema = new mongoose.Schema<
     {},
     UserVirtuals
 >({
-    username: {
+    email: {
         type: String,
         required: true,
         unique: true,
-        validate: {
-            validator: async function(value: string): Promise<boolean> {
-                if (!this.isModified('username')) return true;
-                const user: HydratedDocument<UserFields> | null = await User.findOne({username: value});
-                return !user;
+        validate: [
+            {
+                validator: async function(value: string): Promise<boolean> {
+                    return emailRegex.test(value);
+                },
+                message: "This is email is invalid"
             },
-            message: "This is username is already taken"
-        }
+            {
+                validator: async function(value: string): Promise<boolean> {
+                    if (!this.isModified('email')) return true;
+                    const user: HydratedDocument<UserFields> | null = await User.findOne({email: value});
+                    return !user;
+                },
+                message: "This is email is already taken"
+            }
+        ]
     },
     password: {
         type: String,

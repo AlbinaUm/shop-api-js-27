@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import config from "./config";
 import Category from "./models/Category";
 import Product from "./models/Product";
-import User from "./models/User";
+import User, {generateRefreshToken} from "./models/User";
 
 
 const run = async () => {
@@ -45,23 +45,23 @@ const run = async () => {
     );
 
     const john = new User({
-        username: "John",
+        email: "john@gmail.com",
         password: "123",
         confirmPassword: "123",
         role: "user",
     });
 
-    john.generateToken();
+    john.refreshToken = generateRefreshToken(john);
     await john.save();
 
     const jane = new User({
-        username: "Jane",
+        email: "jane@gmail.com",
         password: "123",
         confirmPassword: "123",
         role: "admin",
     });
 
-    jane.generateToken();
+    jane.refreshToken = generateRefreshToken(jane);
     await jane.save();
 
     await db.close();

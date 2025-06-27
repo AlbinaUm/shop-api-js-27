@@ -38,11 +38,11 @@ usersRouter.get('/callback', async (req, res, next) => {
         console.log(githubUser)
         const {id, name, login} = githubUser.data;
         const genPassword = randomUUID();
-        let user = await User.findOne({username: login});
+        let user = await User.findOne({email: login});
 
         if (!user) {
             user = new User({
-                username: login,
+                email: login,
                 password: genPassword,
                 confirmPassword: genPassword,
                 displayName: name,
@@ -97,14 +97,14 @@ usersRouter.post('/facebook', async (req, res, next) => {
         const name = fbData.name;
 
 
-        let user = await User.findOne({username: email});
+        let user = await User.findOne({email: email});
 
 
         const genPassword = crypto.randomUUID();
 
         if (!user) {
             user = new User({
-                username: email,
+                email: email,
                 password: genPassword,
                 confirmPassword: genPassword,
                 displayName: name,
@@ -126,7 +126,7 @@ usersRouter.post('/facebook', async (req, res, next) => {
 
         const safeUser = {
             _id: user._id,
-            username: user.username,
+            email: user.email,
             role: user.role,
             displayName: user.displayName,
         };
@@ -173,7 +173,7 @@ usersRouter.post('/google', async (req, res, next) => {
 
         if (!user) {
             user = new User({
-                username: email,
+                email,
                 password: genPassword,
                 confirmPassword: genPassword,
                 displayName,
@@ -202,7 +202,7 @@ usersRouter.post('/google', async (req, res, next) => {
 
         const safeUser = {
             _id: user._id,
-            username: user.username,
+            email: user.email,
             role: user.role,
             displayName: user.displayName,
         };
@@ -217,7 +217,7 @@ usersRouter.post('/google', async (req, res, next) => {
 usersRouter.post('/', async (req, res, next) => {
     try {
         const user = new User({
-            username: req.body.username,
+            email: req.body.email,
             password: req.body.password,
             confirmPassword: req.body.confirmPassword,
         });
@@ -236,7 +236,7 @@ usersRouter.post('/', async (req, res, next) => {
 
         const safeUser = {
             _id: user._id,
-            username: user.username,
+            email: user.email,
             role: user.role,
         };
 
@@ -252,15 +252,15 @@ usersRouter.post('/', async (req, res, next) => {
 });
 
 usersRouter.post('/sessions', async (req, res, _next) => {
-    if (!req.body.username || !req.body.password) {
-        res.status(400).send({error: 'Username and password must be in req'});
+    if (!req.body.email || !req.body.password) {
+        res.status(400).send({error: 'Email and password must be in req'});
         return;
     }
 
-    const user = await User.findOne({username: req.body.username});
+    const user = await User.findOne({email: req.body.email});
 
     if (!user) {
-        res.status(404).send({error: "Username not found"});
+        res.status(404).send({error: "Email not found"});
         return;
     }
 
@@ -285,11 +285,11 @@ usersRouter.post('/sessions', async (req, res, _next) => {
 
     const safeUser = {
         _id: user._id,
-        username: user.username,
+        email: user.email,
         role: user.role,
     };
 
-    res.send({message: 'Username and password is correct', user: safeUser, accessToken});
+    res.send({message: 'Email and password is correct', user: safeUser, accessToken});
 });
 
 usersRouter.delete('/sessions', auth, async (req, res, next) => {
@@ -351,7 +351,7 @@ usersRouter.post('/secret', async (req, res, _next) => {
 
         const safeUser = {
             _id: user._id,
-            username: user.username,
+            email: user.email,
             role: user.role,
         };
 
